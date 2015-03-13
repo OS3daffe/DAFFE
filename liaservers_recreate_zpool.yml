@@ -1,0 +1,12 @@
+---
+- hosts: liaservers
+  tasks:
+
+    - name: Recreate zpool ZFS
+      tags: zfs
+      command: "{{item}}"
+      with_items:
+      - zpool destroy -f flocker
+      - truncate --size 10G /opt/flocker/pool-vdev
+      - zpool create flocker /opt/flocker/pool-vdev
+      sudo: yes

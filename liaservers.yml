@@ -1,77 +1,96 @@
 ---
 - hosts: liaservers
   tasks:
-    - name: Fix DPKG state when using APT (just in case)
-      command: sudo dpkg --configure -a
-      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
-      sudo: yes
 
-    - name: Ensure apt is updated
-      command: apt-get update
-      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
-      sudo: yes
+    - name: Install 3.16 kernel
+      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-3.16.7-200.fc20.x86_64.rpm state=present
+
+    - name: Install 3.16 kernel headers
+      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-headers-3.16.7-200.fc20.x86_64.rpm state=present
+
+    - name: Install 3.16 kernel devel
+      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-devel-3.16.7-200.fc20.x86_64.rpm state=present
 
     - name: Ensure yum is updated
-      command: yum update
-      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
-      sudo: yes
-
-    - name: Add EPEL to yum
-      action: "{{ ansible_pkg_mgr }} name=epel-release state=latest"
-      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
-
-    - name: Update certificates (needed for Debian)
-      action: "{{ ansible_pkg_mgr }} name=ca-certificates state=latest"
-
-    - name: Ensure python-apt is installed
-      command: >
-        apt-get install python-apt -y -q
-        creates=/usr/share/doc/python-apt
-      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+      tags: update
+      command: yum update -y --skip-broken --exclude=kernel*
       sudo: yes
 
     - name: Install Python
-      action: "{{ ansible_pkg_mgr }} name=python state=latest"
+      yum: name=python state=latest
 
     - name: Install VIM
-      action: "{{ ansible_pkg_mgr }} name=wget state=latest"
+      yum: name=wget state=latest
+
+    - name: Install GIT
+      tags: git
+      yum: name=git state=latest
 
     - name: Install GCC
-      action: "{{ ansible_pkg_mgr }} name=gcc state=latest"
+      tags: gcc
+      yum: name=gcc state=latest
+
+    - name: Install htop
+      tags: htop
+      yum: name=htop state=latest
+
+    - name: Install fish shell
+      command: "{{item}} creates=/usr/bin/fish"
+      with_items:
+      - cd /etc/yum.repos.d/
+      - wget http://download.opensuse.org/repositories/shells:fish:release:2/Fedora_20/shells:fish:release:2.repo
+      - yum install -y fish
+      sudo: yes
 
     - name: Install python-virtualenv
-      action: "{{ ansible_pkg_mgr }} name=python-virtualenv state=latest"
-      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+      yum: name=python-virtualenv state=latest
 
-    - name: Install python-virtualenv the hard CentOS way
-      command: "{{item}} creates=/usr/bin/virtualenv"
+    - name: Install python-devel
+      yum: name=python-devel state=latest
+
+    - name: Download Flocker Node
+      tags: flocker-node
+      command: "{{item}} creates=/usr/bin/flocker-serve"
       with_items:
-      - yum install python-setuptools -y
-      - easy_install pip
-      - pip install virtualenv
-      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
+      - yum install -y https://s3.amazonaws.com/archive.zfsonlinux.org/fedora/zfs-release$(rpm -E %dist).noarch.rpm
+      - yum install -y http://archive.clusterhq.com/fedora/clusterhq-release$(rpm -E %dist).noarch.rpm
+      - yum install -y flocker-node
       sudo: yes
 
-    - name: Install python-dev (apt)
-      action: "{{ ansible_pkg_mgr }} name=python-dev state=latest"
-      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+    - name: Enable and run Docker
+      service: name=docker enabled=yes state=started
 
-    - name: Install python-devel (yum)
-      action: "{{ ansible_pkg_mgr }} name=python-devel state=latest"
-      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
-
-    - name: Install Docker (apt)
-      action: "{{ ansible_pkg_mgr }} name=docker state=latest"
-      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
-
-    - name: Install Docker (yum)
-      action: "{{ ansible_pkg_mgr }} name=docker-io state=latest"
-      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
-
-    - name: Download Flocker
-      command: "{{item}} creates=/home/ansible/flocker-tutorial/bin/flocker-deploy"
+    - name: Configure firewall
+      command: "{{item}} creates=/home/ansible/firewall_done"
       with_items:
-      - wget https://docs.clusterhq.com/en/0.3.2/_downloads/linux-install.sh
-      - chmod +x linux-install.sh
-      - ./linux-install.sh
+      - firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
+      - firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -j ACCEPT
+      - touch /home/ansible/firewall_done
       sudo: yes
+
+    - name: Configure ZFS
+      tags: zfs
+      command: "{{item}} creates=/home/ansible/zfs_done"
+      with_items:
+      - mkdir /opt/flocker
+      - truncate --size 10G /opt/flocker/pool-vdev
+      - zpool create flocker /opt/flocker/pool-vdev
+      - touch /home/ansible/zfs_done
+      sudo: yes
+
+    - name: Docker images
+      tags: docker-images
+      command: "docker pull {{item}}"
+      with_items:
+      - daffe/daffedummy
+      - clusterhq/logstash
+      - clusterhq/elasticsearch
+      - clusterhq/kibana
+      - clusterhq/mongodb
+      sudo: yes
+
+    - name: Install SSH keys
+      tags: ssh
+      authorized_key: user=root key="{{ lookup('file', 'keys.pub') }}"
+
+

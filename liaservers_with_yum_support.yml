@@ -1,0 +1,90 @@
+---
+- hosts: liaservers
+  tasks:
+    - name: Fix DPKG state when using APT (just in case)
+      command: sudo dpkg --configure -a
+      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+      sudo: yes
+
+    - name: Ensure apt is updated
+      tags: update
+      command: apt-get update
+      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+      sudo: yes
+
+    - name: Ensure yum is updated
+      tags: update
+      command: yum update
+      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
+      sudo: yes
+
+    - name: Add EPEL to yum
+      tags: update
+      action: "{{ ansible_pkg_mgr }} name=epel-release state=latest"
+      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
+
+    - name: Update certificates (needed for Debian)
+      tags: update
+      action: "{{ ansible_pkg_mgr }} name=ca-certificates state=latest"
+
+    - name: Ensure python-apt is installed
+      command: >
+        apt-get install python-apt -y -q
+        creates=/usr/share/doc/python-apt
+      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+      sudo: yes
+
+    - name: Install Python
+      action: "{{ ansible_pkg_mgr }} name=python state=latest"
+
+    - name: Install VIM
+      tags: vim
+      action: "{{ ansible_pkg_mgr }} name=wget state=latest"
+
+    - name: Install GIT
+      tags: git
+      action: "{{ ansible_pkg_mgr }} name=git state=latest"
+
+    - name: Install GCC
+      tags: gcc
+      action: "{{ ansible_pkg_mgr }} name=gcc state=latest"
+
+    - name: Install python-virtualenv
+      action: "{{ ansible_pkg_mgr }} name=python-virtualenv state=latest"
+      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+
+    - name: Install python-virtualenv the hard CentOS way
+      command: "{{item}} creates=/usr/bin/virtualenv"
+      with_items:
+      - yum install python-setuptools -y
+      - easy_install pip
+      - pip install virtualenv
+      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
+      sudo: yes
+
+    - name: Install python-dev (apt)
+      action: "{{ ansible_pkg_mgr }} name=python-dev state=latest"
+      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+
+    - name: Install python-devel (yum)
+      action: "{{ ansible_pkg_mgr }} name=python-devel state=latest"
+      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
+
+    - name: Install Docker (apt)
+      tags: docker
+      action: "{{ ansible_pkg_mgr }} name=docker state=latest"
+      when: "'{{ ansible_pkg_mgr }}' == 'apt'"
+
+    - name: Install Docker (yum)
+      tags: docker
+      action: "{{ ansible_pkg_mgr }} name=docker-io state=latest"
+      when: "'{{ ansible_pkg_mgr }}' == 'yum'"
+
+    - name: Download Flocker
+      tags: flocker
+      command: "{{item}} creates=/home/ansible/flocker-tutorial/bin/flocker-deploy"
+      with_items:
+      - wget https://docs.clusterhq.com/en/0.3.2/_downloads/linux-install.sh
+      - chmod +x linux-install.sh
+      - ./linux-install.sh
+      sudo: yes

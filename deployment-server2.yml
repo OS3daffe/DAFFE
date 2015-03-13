@@ -1,0 +1,4 @@
+"version": 1
+"nodes":
+  "145.100.105.134": []
+  "145.100.105.135": ["elasticsearch", "logstash", "kibana"]
