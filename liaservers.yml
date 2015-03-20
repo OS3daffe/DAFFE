@@ -34,6 +34,10 @@
       tags: htop
       yum: name=htop state=latest
 
+    - name: Install time
+      tags: time
+      yum: name=time state=latest
+
     - name: Install fish shell
       command: "{{item}} creates=/usr/bin/fish"
       with_items:
@@ -89,8 +93,40 @@
       - clusterhq/mongodb
       sudo: yes
 
+    - name: Install Mongo-org repository
+      tags: mongodb
+      command: 'echo -e "[mongodb-org-2.6]\nname=MongoDB 2.6 Repository\nbaseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64/\ngpgcheck=0\nenabled=1\n" > /etc/yum.repos.d/mongodb-org-2.6.repo creates=/etc/yum.repos.d/mongodb-org-2.6.repo'
+      sudo: yes
+
+    - name: Install MongoDB shell
+      tags: mongodb
+      yum: name=mongodb-org-shell state=latest
+
+    - name: Install MongoDB tools
+      tags: mongodb
+      yum: name=mongodb-org-tools state=latest
+
+#    - name: Disable SELinux
+#      tags: firewall
+#      command: "setenforce 0"
+#      sudo: yes
+
+#    - name: Disable Firewall
+#      tags: firewall
+#      command: "iptables -F"
+#      sudo: yes
+
     - name: Install SSH keys
       tags: ssh
       authorized_key: user=root key="{{ lookup('file', 'keys.pub') }}"
 
-
+    - name: Destroy data
+      tags: destroy
+      command: "{{item}}"
+      with_items:
+#      - docker rm -f $(docker ps -aq)
+      - zpool destroy flocker
+      - rm -rf /flocker
+      - zpool create flocker /opt/flocker/pool-vdev
+      - sudo truncate --size 30G /opt/flocker/pool-vdev
+      sudo: yes

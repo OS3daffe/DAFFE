@@ -1,0 +1,122 @@
+sudo iptables -L -v -n
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+ 2956  273K ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+    0     0 ACCEPT     all  --  lo     *       0.0.0.0/0            0.0.0.0/0
+ 1473 88669 INPUT_direct  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+ 1473 88669 INPUT_ZONES_SOURCE  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+ 1473 88669 INPUT_ZONES  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0
+    1    44 DROP       all  --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate INVALID
+ 1458 87801 REJECT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            reject-with icmp-host-prohibited
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+   53  5369 ACCEPT     tcp  --  !docker0 docker0  0.0.0.0/0            172.17.0.3           tcp dpt:8080
+    0     0 ACCEPT     tcp  --  !docker0 docker0  0.0.0.0/0            172.17.0.2           tcp dpt:27017
+  323 22810 ACCEPT     tcp  --  !docker0 docker0  0.0.0.0/0            172.17.0.2           tcp dpt:8080
+  683 48507 ACCEPT     tcp  --  !docker0 docker0  0.0.0.0/0            172.17.0.3           tcp dpt:8080
+    0     0 ACCEPT     all  --  *      docker0  0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+  721 66768 ACCEPT     all  --  docker0 !docker0  0.0.0.0/0            0.0.0.0/0
+    0     0 ACCEPT     all  --  docker0 docker0  0.0.0.0/0            0.0.0.0/0
+    0     0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+    0     0 ACCEPT     all  --  lo     *       0.0.0.0/0            0.0.0.0/0
+    0     0 FORWARD_direct  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FORWARD_IN_ZONES_SOURCE  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FORWARD_IN_ZONES  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FORWARD_OUT_ZONES_SOURCE  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FORWARD_OUT_ZONES  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 DROP       all  --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate INVALID
+    0     0 REJECT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            reject-with icmp-host-prohibited
+
+Chain OUTPUT (policy ACCEPT 95 packets, 13636 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+ 3210  520K OUTPUT_direct  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain FORWARD_IN_ZONES (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 FWDI_public  all  --  veth9dc783a *       0.0.0.0/0            0.0.0.0/0           [goto]
+    0     0 FWDI_public  all  --  veth3e6a8b4 *       0.0.0.0/0            0.0.0.0/0           [goto]
+    0     0 FWDI_public  all  --  p3p1   *       0.0.0.0/0            0.0.0.0/0           [goto]
+    0     0 FWDI_public  all  --  +      *       0.0.0.0/0            0.0.0.0/0           [goto]
+
+Chain FORWARD_IN_ZONES_SOURCE (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FORWARD_OUT_ZONES (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 FWDO_public  all  --  *      veth9dc783a  0.0.0.0/0            0.0.0.0/0           [goto]
+    0     0 FWDO_public  all  --  *      veth3e6a8b4  0.0.0.0/0            0.0.0.0/0           [goto]
+    0     0 FWDO_public  all  --  *      p3p1    0.0.0.0/0            0.0.0.0/0           [goto]
+    0     0 FWDO_public  all  --  *      +       0.0.0.0/0            0.0.0.0/0           [goto]
+
+Chain FORWARD_OUT_ZONES_SOURCE (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FORWARD_direct (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain FWDI_public (4 references)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 FWDI_public_log  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FWDI_public_deny  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FWDI_public_allow  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain FWDI_public_allow (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FWDI_public_deny (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FWDI_public_log (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FWDO_public (4 references)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 FWDO_public_log  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FWDO_public_deny  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+    0     0 FWDO_public_allow  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain FWDO_public_allow (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FWDO_public_deny (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FWDO_public_log (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain INPUT_ZONES (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 IN_public  all  --  veth9dc783a *       0.0.0.0/0            0.0.0.0/0           [goto]
+    0     0 IN_public  all  --  veth3e6a8b4 *       0.0.0.0/0            0.0.0.0/0           [goto]
+   88  5569 IN_public  all  --  p3p1   *       0.0.0.0/0            0.0.0.0/0           [goto]
+ 1385 83100 IN_public  all  --  +      *       0.0.0.0/0            0.0.0.0/0           [goto]
+
+Chain INPUT_ZONES_SOURCE (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain INPUT_direct (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain IN_public (4 references)
+ pkts bytes target     prot opt in     out     source               destination
+ 1473 88669 IN_public_log  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+ 1473 88669 IN_public_deny  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+ 1473 88669 IN_public_allow  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain IN_public_allow (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+    0     0 ACCEPT     udp  --  *      *       0.0.0.0/0            224.0.0.251          udp dpt:5353 ctstate NEW
+   14   824 ACCEPT     tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:22 ctstate NEW
+
+Chain IN_public_deny (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain IN_public_log (1 references)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT_direct (1 references)
+ pkts bytes target     prot opt in     out     source               destination

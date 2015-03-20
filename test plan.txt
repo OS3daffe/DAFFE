@@ -1,0 +1,59 @@
+
+
+DAFFE TEST PLAN:
+
+
+Test scenario's:
+- empty   = 0 entries of 4K
+- 100 MiB = 25K entries of 4K
+- 1 GiB   = 250K entries of 4K
+- 10 GiB  = 2.5M entries of 4K
+
+
+Deploy instances locally and EC2:
+- Ireland
+- Frankfurt
+- West Virginia
+- Singapore
+- Amsterdam (use DAFFE2 preferred)
+
+
+Measure:
+- Migration time                        (time flocker-deploy daffeflock-deployment2.yml daffeflock-application.yml)
+- Downtime during migration             (mongotime.sh modified to log to file for graph)
+- Latency before and after Migration    (ping servers mongodb)
+
+
+Predictions:
+- Migration time increases a lot
+- Downtime increases only a little
+- Latency should improve once data is closer
+
+
+Explain issues:
+- IPTABLES investigation (short time)
+- Connections between containers
+- Reliability of software
+- Fedora / Xen / kernel / ZFS compatibility
+
+
+Future work:
+- IPTABLES!!!!!
+- Analytics
+- Elasticsearch
+- Kibana
+- Ansible module
+
+
+Presentation:
+- 10 minutes = 10 slides
+- Slides in Google Docs
+- Research question
+- Explaining components
+- Graph of network config one server
+- Graph of multiple server
+- Explain measurements
+- Conclusions
+- Problems and future work
+- Questions
+
