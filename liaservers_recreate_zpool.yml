@@ -7,6 +7,7 @@
       command: "{{item}}"
       with_items:
       - zpool destroy -f flocker
+      - rm -rf /flocker
       - truncate --size 10G /opt/flocker/pool-vdev
       - zpool create flocker /opt/flocker/pool-vdev
       sudo: yes

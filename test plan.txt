@@ -11,8 +11,8 @@ Test scenario's:
 
 
 Deploy instances locally and EC2:
-- Ireland
-- Frankfurt
+- Ireland (DAFFE 3)
+- Frankfurt (DAFFE 4)
 - West Virginia
 - Singapore
 - Amsterdam (use DAFFE2 preferred)
@@ -56,4 +56,5 @@ Presentation:
 - Conclusions
 - Problems and future work
 - Questions
+
 

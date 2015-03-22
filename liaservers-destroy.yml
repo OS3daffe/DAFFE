@@ -1,0 +1,7 @@
+---
+- hosts: liaservers
+  tasks:
+
+    - name: Destroy data
+      tags: destroy
+      script: reset_zpool.sh

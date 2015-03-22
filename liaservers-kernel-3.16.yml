@@ -1,0 +1,21 @@
+---
+- hosts: liaservers
+  tasks:
+
+    - name: Install 3.16 kernel
+      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-3.16.7-200.fc20.x86_64.rpm state=present
+
+    - name: Install 3.16 kernel headers
+      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-headers-3.16.7-200.fc20.x86_64.rpm state=present
+
+    - name: Install 3.16 kernel devel
+      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-devel-3.16.7-200.fc20.x86_64.rpm state=present
+
+    - name: Remove ZFS (when present with older kernel needs reinstall)
+      yum: name=zfs state=remove
+
+
+# Check manually and configure GRUB
+# rpm -qa | grep kernel
+# vim /boot/grub/grub.conf
+

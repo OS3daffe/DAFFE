@@ -2,15 +2,6 @@
 - hosts: liaservers
   tasks:
 
-    - name: Install 3.16 kernel
-      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-3.16.7-200.fc20.x86_64.rpm state=present
-
-    - name: Install 3.16 kernel headers
-      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-headers-3.16.7-200.fc20.x86_64.rpm state=present
-
-    - name: Install 3.16 kernel devel
-      yum: name=https://kojipkgs.fedoraproject.org//packages/kernel/3.16.7/200.fc20/x86_64/kernel-devel-3.16.7-200.fc20.x86_64.rpm state=present
-
     - name: Ensure yum is updated
       tags: update
       command: yum update -y --skip-broken --exclude=kernel*
@@ -20,6 +11,9 @@
       yum: name=python state=latest
 
     - name: Install VIM
+      yum: name=vim state=latest
+
+    - name: Install WGET
       yum: name=wget state=latest
 
     - name: Install GIT
@@ -52,12 +46,16 @@
     - name: Install python-devel
       yum: name=python-devel state=latest
 
+    - name: Fedora version
+      shell: rpm -E %dist
+      register: fedora_version
+
     - name: Download Flocker Node
       tags: flocker-node
       command: "{{item}} creates=/usr/bin/flocker-serve"
       with_items:
-      - yum install -y https://s3.amazonaws.com/archive.zfsonlinux.org/fedora/zfs-release$(rpm -E %dist).noarch.rpm
-      - yum install -y http://archive.clusterhq.com/fedora/clusterhq-release$(rpm -E %dist).noarch.rpm
+      - yum install -y https://s3.amazonaws.com/archive.zfsonlinux.org/fedora/zfs-release{{ fedora_version.stdout }}.noarch.rpm
+      - yum install -y http://archive.clusterhq.com/fedora/clusterhq-release{{ fedora_version.stdout }}.noarch.rpm
       - yum install -y flocker-node
       sudo: yes
 
@@ -106,10 +104,11 @@
       tags: mongodb
       yum: name=mongodb-org-tools state=latest
 
-#    - name: Disable SELinux
-#      tags: firewall
-#      command: "setenforce 0"
-#      sudo: yes
+    - name: Disable SELinux
+      tags: firewall
+      command: "setenforce 0"
+      ignore_errors: yes
+      sudo: yes
 
 #    - name: Disable Firewall
 #      tags: firewall
@@ -119,14 +118,3 @@
     - name: Install SSH keys
       tags: ssh
       authorized_key: user=root key="{{ lookup('file', 'keys.pub') }}"
-
-    - name: Destroy data
-      tags: destroy
-      command: "{{item}}"
-      with_items:
-#      - docker rm -f $(docker ps -aq)
-      - zpool destroy flocker
-      - rm -rf /flocker
-      - zpool create flocker /opt/flocker/pool-vdev
-      - sudo truncate --size 30G /opt/flocker/pool-vdev
-      sudo: yes
