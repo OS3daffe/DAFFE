@@ -43,6 +43,8 @@ Future work:
 - Elasticsearch
 - Kibana
 - Ansible module
+- Amazon EC2 scripting
+- Multiple OS
 
 
 Presentation:
